@@ -264,3 +264,20 @@ getting file \passwords.txt of size 98 as passwords.txt (0.2 KiloBytes/sec) (ave
 ```
 
 Nice we got password.txt lets look inside now
+
+```sh
+┌──(kali㉿kali)-[~]
+└─$ cat passwords.txt 
+[User Passwords - Encoded]
+Qm9iIC0gIVBAJCRXMHJEITEyMw==
+QmlsbCAtIEp1dzRubmFNNG40MjA2OTY5NjkhJCQk
+```
+
+These look like they are b64 encoded the == gives it away lets check if thats the case 
+
+<img width="459" height="685" alt="image" src="https://github.com/user-attachments/assets/f5022efb-63eb-4981-bcc7-568df54d3503" />
+
+Looks like the first user-password combination is Bob - !P@$$W0rD!123
+and the second one is Bill - Juw4nnaM4n420696969!$$$
+
+
