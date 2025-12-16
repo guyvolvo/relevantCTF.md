@@ -13,6 +13,9 @@
 - Note - Nothing in this room requires Metasploit
 - Writeups will not be accepted for this room.
 
-- _User Flag THM{fdk4ka34vk346ksxfr21tg789ktf45}_
-- _Root Flag THM{1fk5kf469devly1gl320zafgl345pv}_
+
+## Flags after completion : 
+
+- **_User Flag THM{fdk4ka34vk346ksxfr21tg789ktf45}_**
+- **_Root Flag THM{1fk5kf469devly1gl320zafgl345pv}_**
 
