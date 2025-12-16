@@ -1,14 +1,5 @@
-**So here are the rules and hints we get from the challenge:**
 
-- Any tools or techniques are permitted in this engagement, however we ask that you attempt manual exploitation first
-- Locate and note all vulnerabilities found
-- Submit the flags discovered to the dashboard
-- Only the IP address assigned to your machine is in scope
-- Find and report ALL vulnerabilities (yes, there is more than one path to root)
-- Note - Nothing in this room requires Metasploit
-- Writeups will not be accepted for this room.
-
-**Alright lets start**
+## **Alright lets start**
 
 **First we have to connect to the vpn,** 
 
