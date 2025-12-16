@@ -75,3 +75,192 @@ Host script results:
 Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
 Nmap done: 1 IP address (1 host up) scanned in 57.68 seconds
 ```
+So the open services on the machine are HTTP, RPC, SMB , and RDP
+First ill have to try smb enumeration,
+
+```sh
+┌──(kali㉿kali)-[~]
+└─$ smbclient -L //10.64.160.63 -N       
+
+        Sharename       Type      Comment
+        ---------       ----      -------
+        ADMIN$          Disk      Remote Admin
+        C$              Disk      Default share
+        IPC$            IPC       Remote IPC
+        nt4wrksv        Disk      
+Reconnecting with SMB1 for workgroup listing.
+do_connect: Connection to 10.64.160.63 failed (Error NT_STATUS_RESOURCE_NAME_NOT_FOUND)
+Unable to connect with SMB1 -- no workgroup available
+
+┌──(kali㉿kali)-[~]
+└─$ smbclient //10.64.160.63/ADMIN$ -N
+tree connect failed: NT_STATUS_ACCESS_DENIED
+                                                                                          
+┌──(kali㉿kali)-[~]
+└─$ smbclient //10.64.160.63/C$ -N    
+tree connect failed: NT_STATUS_ACCESS_DENIED
+                                                                                          
+┌──(kali㉿kali)-[~]
+└─$ smbclient //10.64.160.63/IPC$ -N  
+Try "help" to get a list of possible commands.
+smb: \> shares
+shares: command not found
+smb: \> help
+?              allinfo        altname        archive        backup         
+blocksize      cancel         case_sensitive cd             chmod          
+chown          close          del            deltree        dir            
+du             echo           exit           get            getfacl        
+geteas         hardlink       help           history        iosize         
+lcd            link           lock           lowercase      ls             
+l              mask           md             mget           mkdir          
+mkfifo         more           mput           newer          notify         
+open           posix          posix_encrypt  posix_open     posix_mkdir    
+posix_rmdir    posix_unlink   posix_whoami   print          prompt         
+put            pwd            q              queue          quit           
+readlink       rd             recurse        reget          rename         
+reput          rm             rmdir          showacls       setea          
+setmode        scopy          stat           symlink        tar            
+tarmode        timeout        translate      unlock         volume         
+vuid           wdel           logon          listconnect    showconnect    
+tcon           tdis           tid            utimes         logoff         
+..             !              
+smb: \> 
+```
+
+It appears we established a connection with the IPC$ which is not very useful lets try another way
+
+```sh
+SMBMap - Samba Share Enumerator v1.10.4 | Shawn Evans - ShawnDEvans@gmail.com<mailto:ShawnDEvans@gmail.com>
+                     https://github.com/ShawnDEvans/smbmap
+
+[\] Checking for open ports...                                                            [|] Checking for open ports...                                                            [/] Checking for open ports...                                                            [-] Checking for open ports...                                                            [*] Detected 1 hosts serving SMB        
+[\] Authenticating...                                                                     [|] Authenticating...                                                                     [/] Authenticating...                                                                     [-] Authenticating...                                                                     [\] Authenticating...                                                                     [|] Authenticating...                                                                     [/] Authenticating...                                                                     [-] Authenticating...                                                                     [\] Authenticating...                                                                     [|] Authenticating...                                                                     [/] Authenticating...                                                                     [-] Authenticating...                                                                     [\] Authenticating...                                                                     [|] Authenticating...                                                                     [/] Authenticating...                                                                     [*] Established 0 SMB connections(s) and 0 authenticated session(s)
+[-] Closing connections..                                                                 [\] Closing connections..                                                                 [|] Closing connections..                                                                 [/] Closing connections..                                                                 [-] Closing connections..                                                                                                                                                           [*] Closed 0 connections
+                                                                                          
+┌──(kali㉿kali)-[~]
+└─$ enum4linux -a 10.64.160.63
+Starting enum4linux v0.9.1 ( http://labs.portcullis.co.uk/application/enum4linux/ ) on Tue Dec 16 07:27:37 2025
+
+ =========================================( Target Information )=========================================                                                                           
+                                                                                          
+Target ........... 10.64.160.63                                                           
+RID Range ........ 500-550,1000-1050
+Username ......... ''
+Password ......... ''
+Known Usernames .. administrator, guest, krbtgt, domain admins, root, bin, none
+
+
+ ============================( Enumerating Workgroup/Domain on 10.64.160.63 )============================                                                                           
+                                                                                          
+                                                                                          
+[E] Can't find workgroup/domain                                                           
+                                                                                          
+                                                                                          
+
+ ================================( Nbtstat Information for 10.64.160.63 )================================                                                                           
+                                                                                          
+Looking up status of 10.64.160.63                                                         
+No reply from 10.64.160.63
+
+ ===================================( Session Check on 10.64.160.63 )===================================                                                                            
+                                                                                          
+                                                                                          
+[E] Server doesn't allow session using username '', password ''.  Aborting remainder of tests.                                                                                      
+                                                                                          
+                                                                                          
+┌──(kali㉿kali)-[~]
+└─$ rpcclient -U "" -N 10.64.160.63   
+Cannot connect to server.  Error was NT_STATUS_ACCESS_DENIED
+```
+lets try seeing what we get as user 'guest' with crackmapexec
+
+```sh
+┌──(kali㉿kali)-[~]
+└─$ crackmapexec smb 10.64.160.63 -u 'guest' -p ''
+
+SMB         10.64.160.63    445    RELEVANT         [*] Windows Server 2016 Standard Evaluation 14393 x64 (name:RELEVANT) (domain:Relevant) (signing:False) (SMBv1:True)
+SMB         10.64.160.63    445    RELEVANT         [+] Relevant\guest: 
+                                                                                                            
+┌──(kali㉿kali)-[~]
+└─$ smbclient -L //┌──(kali㉿kali)-[~]
+└─$ crackmapexec smb 10.64.160.63 -u '' -p ''
+
+[*] First time use detected
+[*] Creating home directory structure
+[*] Creating default workspace
+[*] Initializing SMB protocol database
+[*] Initializing FTP protocol database
+[*] Initializing RDP protocol database
+[*] Initializing SSH protocol database
+[*] Initializing WINRM protocol database
+[*] Initializing MSSQL protocol database
+[*] Initializing LDAP protocol database
+[*] Copying default configuration file
+[*] Generating SSL certificate
+SMB         10.64.160.63    445    RELEVANT         [*] Windows Server 2016 Standard Evaluation 14393 x64 (name:RELEVANT) (domain:Relevant) (signing:False) (SMBv1:True)
+SMB         10.64.160.63    445    RELEVANT         [-] Relevant\: STATUS_ACCESS_DENIED 
+                                                                                          
+┌──(kali㉿kali)-[~]
+└─$ crackmapexec smb 10.64.160.63 -u 'guest' -p ''
+
+SMB         10.64.160.63    445    RELEVANT         [*] Windows Server 2016 Standard Evaluation 14393 x64 (name:RELEVANT) (domain:Relevant) (signing:False) (SMBv1:True)
+SMB         10.64.160.63    445    RELEVANT         [+] Relevant\guest: 
+
+                                                                                                            
+┌──(kali㉿kali)-[~]
+└─$ smbclient -L //10.64.160.63 -U guest%        
+
+        Sharename       Type      Comment
+        ---------       ----      -------
+        ADMIN$          Disk      Remote Admin
+        C$              Disk      Default share
+        IPC$            IPC       Remote IPC
+        nt4wrksv        Disk      
+Reconnecting with SMB1 for workgroup listing.
+do_connect: Connection to 10.64.160.63 failed (Error NT_STATUS_RESOURCE_NAME_NOT_FOUND)
+Unable to connect with SMB1 -- no workgroup available
+                                                                                                            
+┌──(kali㉿kali)-[~]
+└─$ smbmap -H 10.64.160.63 -u guest      
+
+    ________  ___      ___  _______   ___      ___       __         _______
+   /"       )|"  \    /"  ||   _  "\ |"  \    /"  |     /""\       |   __ "\
+  (:   \___/  \   \  //   |(. |_)  :) \   \  //   |    /    \      (. |__) :)
+   \___  \    /\  \/.    ||:     \/   /\   \/.    |   /' /\  \     |:  ____/
+    __/  \   |: \.        |(|  _  \  |: \.        |  //  __'  \    (|  /
+   /" \   :) |.  \    /:  ||: |_)  :)|.  \    /:  | /   /  \   \  /|__/ \
+  (_______/  |___|\__/|___|(_______/ |___|\__/|___|(___/    \___)(_______)
+-----------------------------------------------------------------------------
+SMBMap - Samba Share Enumerator v1.10.4 | Shawn Evans - ShawnDEvans@gmail.com<mailto:ShawnDEvans@gmail.com>
+                     https://github.com/ShawnDEvans/smbmap
+
+[\] Checking for open ports...                                                                              [|] Checking for open ports...                                                                              [/] Checking for open ports...                                                                              [-] Checking for open ports...                                                                              [*] Detected 1 hosts serving SMB
+[\] Authenticating...                                                                                       [|] Authenticating...                                                                                       [/] Authenticating...                                                                                       [-] Authenticating...                                                                                       [\] Authenticating...                                                                                       [|] Authenticating...                                                                                       [/] Authenticating...                                                                                       [-] Authenticating...                                                                                       [\] Authenticating...                                                                                       [|] Authenticating...                                                                                       [/] Authenticating...                                                                                       [-] Authenticating...                                                                                       [\] Authenticating...                                                                                       [|] Authenticating...                                                                                       [/] Authenticating...                                                                                       [*] Established 1 SMB connections(s) and 1 authenticated session(s)
+[-] Enumerating shares...                                                                                   [\] Enumerating shares...                                                                                   [|] Enumerating shares...                                                                                   [/] Enumerating shares...                                                                                   [-] Enumerating shares...                                                                                   [\] Enumerating shares...                                                                                   [|] Enumerating shares...                                                                                   [/] Enumerating shares...                                                                                   [-] Enumerating shares...                                                                                   [\] Enumerating shares...                                                                                   [|] Enumerating shares...                                                                                   [/] Enumerating shares...                                                                                   [-] Enumerating shares...                                                                                   [\] Enumerating shares...                                                                                   [|] Enumerating shares...                                                                                   [/] Enumerating shares...                                                                                   [-] Enumerating shares...                                                                                   [\] Enumerating shares...                                                                                   [|] Enumerating shares...                                                                                   [/] Enumerating shares...                                                                                   [-] Enumerating shares...                                                                                   [\] Enumerating shares...                                                                                   [|] Enumerating shares...                                                                                   [/] Enumerating shares...                                                                                   [-] Enumerating shares...                                                                                   [\] Enumerating shares...                                                                                   [|] Enumerating shares...                                                                                   [/] Enumerating shares...                                                                                   [-] Enumerating shares...                                                                                   [\] Enumerating shares...                                                                                   [|] Enumerating shares...                                                                                   [/] Enumerating shares...                                                                                   [-] Enumerating shares...                                                                                   [\] Enumerating shares...                                                                                   [|] Enumerating shares...                                                                                   [/] Enumerating shares...                                                                                   [-] Enumerating shares...                                                                                   [\] Enumerating shares...                                                                                   [|] Enumerating shares...                                                                                   [/] Enumerating shares...                                                                                   [-] Enumerating shares...                                                                                   [\] Enumerating shares...                                                                                   [|] Enumerating shares...                                                                                   [/] Enumerating shares...                                                                                   [-] Enumerating shares...                                                                                   [\] Enumerating shares...                                                                                   [|] Enumerating shares...                                                                                   [/] Enumerating shares...                                                                                   [-] Enumerating shares...                                                                                   [\] Enumerating shares...                                                                                   [|] Enumerating shares...                                                                                   [/] Enumerating shares...                                                                                   [-] Enumerating shares...                                                                                   [\] Enumerating shares...                                                                                   [|] Enumerating shares...                                                                                   [/] Enumerating shares...                                                                                   [-] Enumerating shares...                                                                                   [\] Enumerating shares...                                                                                   [|] Enumerating shares...                                                                                   [/] Enumerating shares...                                                                                   [-] Enumerating shares...                                                                                   [\] Enumerating shares...                                                                                   [|] Enumerating shares...                                                                                   [/] Enumerating shares...                                                                                   [-] Enumerating shares...                                                                                   [\] Enumerating shares...                                                                                   [|] Enumerating shares...                                                                                   [/] Enumerating shares...                                                                                   [-] Enumerating shares...                                                                                   [\] Enumerating shares...                                                                                   [|] Enumerating shares...                                                                                   [/] Enumerating shares...                                                                                   [-] Enumerating shares...                                                                                   [\] Enumerating shares...                                                                                   [|] Enumerating shares...                                                                                   [/] Enumerating shares...                                                                                   [-] Enumerating shares...                                                                                   [\] Enumerating shares...                                                                                   [|] Enumerating shares...                                                                                   [/] Enumerating shares...                                                                                   [-] Enumerating shares...                                                                                   [\] Enumerating shares...                                                                                   [|] Enumerating shares...                                                                                   [/] Enumerating shares...                                                                                   [-] Enumerating shares...                                                                                                                                                                                       
+[+] IP: 10.64.160.63:445        Name: 10.64.160.63              Status: Authenticated
+        Disk                                                    Permissions     Comment
+        ----                                                    -----------     -------
+        ADMIN$                                                  NO ACCESS       Remote Admin
+        C$                                                      NO ACCESS       Default share
+        IPC$                                                    READ ONLY       Remote IPC
+        nt4wrksv                                                READ, WRITE
+[\] Closing connections..                                                                                   [|] Closing connections..                                                                                   [/] Closing connections..                                                                                   [-] Closing connections..                                                                                   [\] Closing connections..                                                                                   [|] Closing connections..                                                                                   [/] Closing connections..                                                                                   [-] Closing connections..                                                                                   [*] Closed 1 connections
+```
+
+Jackpot we see that the user guest doesnt require a password and that we can read and write to share nt4wrksv
+
+```sh
+┌──(kali㉿kali)-[~]
+└─$ smbclient  //10.64.160.63/nt4wrksv -U guest% 
+Try "help" to get a list of possible commands.
+smb: \> ls
+  .                                   D        0  Tue Dec 16 07:30:34 2025
+  ..                                  D        0  Tue Dec 16 07:30:34 2025
+  passwords.txt                       A       98  Sat Jul 25 11:15:33 2020
+
+                7735807 blocks of size 4096. 5101049 blocks available
+smb: \> get passwords.txt
+getting file \passwords.txt of size 98 as passwords.txt (0.2 KiloBytes/sec) (average 0.2 KiloBytes/sec)
+```
+
+Nice we got password.txt lets look inside now
