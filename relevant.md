@@ -8,9 +8,9 @@
 - Note - Nothing in this room requires Metasploit
 - Writeups will not be accepted for this room.
 
-Alright lets start
+**Alright lets start**
 
-First we have to connect to the vpn, 
+**First we have to connect to the vpn,** 
 
 ```bash
 2025-12-16 06:21:58 Initialization Sequence Completed
@@ -19,7 +19,7 @@ First we have to connect to the vpn,
 2025-12-16 06:21:58 Protocol options: explicit-exit-notify 1, protocol-flags cc-exit tls-ekm dyn-tls-crypt
 ```
 
-I'll try scanning the machine for any services that could be running 
+**I'll try scanning the machine for any services that could be running** 
 
 ```sh
 ┌──(kali㉿kali)-[~]
@@ -127,7 +127,7 @@ tcon           tdis           tid            utimes         logoff
 smb: \> 
 ```
 
-It appears we established a connection with the IPC$ which is not very useful lets try another way
+**It appears we established a connection with the IPC$ which is not very useful lets try another way**
 
 ```sh
 SMBMap - Samba Share Enumerator v1.10.4 | Shawn Evans - ShawnDEvans@gmail.com<mailto:ShawnDEvans@gmail.com>
@@ -172,7 +172,7 @@ No reply from 10.64.160.63
 └─$ rpcclient -U "" -N 10.64.160.63   
 Cannot connect to server.  Error was NT_STATUS_ACCESS_DENIED
 ```
-lets try seeing what we get as user 'guest' with crackmapexec
+**lets try seeing what we get as user 'guest' with crackmapexec**
 
 ```sh
 ┌──(kali㉿kali)-[~]
@@ -247,8 +247,7 @@ SMBMap - Samba Share Enumerator v1.10.4 | Shawn Evans - ShawnDEvans@gmail.com<ma
 [\] Closing connections..                                                                                   [|] Closing connections..                                                                                   [/] Closing connections..                                                                                   [-] Closing connections..                                                                                   [\] Closing connections..                                                                                   [|] Closing connections..                                                                                   [/] Closing connections..                                                                                   [-] Closing connections..                                                                                   [*] Closed 1 connections
 ```
 
-Jackpot we see that the user guest doesnt require a password and that we can read and write to share nt4wrksv
-
+**Jackpot we see that the user guest doesnt require a password and that we can read and write to share nt4wrksv**
 ```sh
 ┌──(kali㉿kali)-[~]
 └─$ smbclient  //10.64.160.63/nt4wrksv -U guest% 
@@ -263,7 +262,7 @@ smb: \> get passwords.txt
 getting file \passwords.txt of size 98 as passwords.txt (0.2 KiloBytes/sec) (average 0.2 KiloBytes/sec)
 ```
 
-Nice we got password.txt lets look inside now
+**Nice we got password.txt lets look inside now**
 
 ```sh
 ┌──(kali㉿kali)-[~]
@@ -273,11 +272,40 @@ Qm9iIC0gIVBAJCRXMHJEITEyMw==
 QmlsbCAtIEp1dzRubmFNNG40MjA2OTY5NjkhJCQk
 ```
 
-These look like they are b64 encoded the == gives it away lets check if thats the case 
+**These look like they are b64 encoded the == gives it away lets check if thats the case** 
 
 <img width="459" height="685" alt="image" src="https://github.com/user-attachments/assets/f5022efb-63eb-4981-bcc7-568df54d3503" />
 
 Looks like the first user-password combination is Bob - !P@$$W0rD!123
 and the second one is Bill - Juw4nnaM4n420696969!$$$
+
+```sh
+┌──(kali㉿kali)-[~]
+└─$ crackmapexec smb 10.64.160.63 -u 'Bob' -p '!P@$$W0rD!123' --shares
+SMB         10.64.160.63    445    RELEVANT         [*] Windows Server 2016 Standard Evaluation 14393 x64 (name:RELEVANT) (domain:Relevant) (signing:False) (SMBv1:True)
+SMB         10.64.160.63    445    RELEVANT         [+] Relevant\Bob:!P@$$W0rD!123 
+SMB         10.64.160.63    445    RELEVANT         [+] Enumerated shares
+SMB         10.64.160.63    445    RELEVANT         Share           Permissions     Remark
+SMB         10.64.160.63    445    RELEVANT         -----           -----------     ------
+SMB         10.64.160.63    445    RELEVANT         ADMIN$                          Remote Admin
+SMB         10.64.160.63    445    RELEVANT         C$                              Default share
+SMB         10.64.160.63    445    RELEVANT         IPC$                            Remote IPC
+SMB         10.64.160.63    445    RELEVANT         nt4wrksv        READ,WRITE      
+                                                                                          
+┌──(kali㉿kali)-[~]
+└─$ crackmapexec smb 10.64.160.63 -u 'Bill' -p 'Juw4nnaM4n420696969!$$$' --shares
+SMB         10.64.160.63    445    RELEVANT         [*] Windows Server 2016 Standard Evaluation 14393 x64 (name:RELEVANT) (domain:Relevant) (signing:False) (SMBv1:True)
+SMB         10.64.160.63    445    RELEVANT         [+] Relevant\Bill:Juw4nnaM4n420696969!$$$ 
+SMB         10.64.160.63    445    RELEVANT         [+] Enumerated shares
+SMB         10.64.160.63    445    RELEVANT         Share           Permissions     Remark
+SMB         10.64.160.63    445    RELEVANT         -----           -----------     ------
+SMB         10.64.160.63    445    RELEVANT         ADMIN$                          Remote Admin
+SMB         10.64.160.63    445    RELEVANT         C$                              Default share
+SMB         10.64.160.63    445    RELEVANT         IPC$                            Remote IPC
+SMB         10.64.160.63    445    RELEVANT         nt4wrksv        READ,WRITE      
+
+```
+
+**Looks like they do not have any special privileges** 
 
 
